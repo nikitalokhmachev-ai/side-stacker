@@ -1,4 +1,5 @@
 import random
+
 ROWS = 7
 COLS = 7
 

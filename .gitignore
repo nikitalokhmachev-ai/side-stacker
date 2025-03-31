@@ -1,2 +1,4 @@
 .env
 *.ipynb
+*__pycache__
+.export-ignore
