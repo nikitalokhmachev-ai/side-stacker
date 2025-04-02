@@ -18,7 +18,7 @@ class PlayerInfo(BaseModel):
     nickname: str
     type: PlayerType
 
-class MoveRequest(BaseModel):
+class Move(BaseModel):
     player: str
     row: int
     side: str  # 'L' or 'R'

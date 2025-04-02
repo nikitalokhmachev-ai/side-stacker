@@ -38,7 +38,7 @@ def create_game(req: schemas.GameCreateRequest, db: Session = Depends(get_db)):
 def get_game_state(game_id: UUID, db: Session = Depends(get_db)):
     game = crud.get_game(db, game_id)
     if not game:
-        raise HTTPException(status_code=404, detail="Game not found")
+        raise HTTPException(status_code=404, detail=f"Game {game_id} not found")
     return schemas.GameState(
         id=str(game.id),
         board=game.board,
@@ -51,7 +51,26 @@ def get_game_state(game_id: UUID, db: Session = Depends(get_db)):
     )
 
 @router.post("/{game_id}/move", response_model=schemas.GameState)
-def make_move(game_id: UUID, move: schemas.MoveRequest, db: Session = Depends(get_db)):
+def make_move(game_id: UUID, move: schemas.Move, db: Session = Depends(get_db)):
+    game = crud.make_move(db, game_id, move)
+    return schemas.GameState(
+        id=str(game.id),
+        board=game.board,
+        current_turn=game.current_turn,
+        status=game.status,
+        player_1=schemas.PlayerInfo(
+            id=game.player_1.id, nickname=game.player_1.nickname, type=game.player_1.type),
+        player_2=schemas.PlayerInfo(
+            id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
+    )
+
+@router.post("/{game_id}/bot/{difficulty}", response_model=schemas.GameState)
+def make_bot_move(game_id: UUID, difficulty: str, db: Session = Depends(get_db)):
+    bot_move = crud.get_bot_move(db, game_id, difficulty)
+    if not bot_move:
+        raise HTTPException(status_code=404, detail="Difficulty not found.")
+
+    move = schemas.Move(player=game.current_turn, row=bot_move[0], side=bot_move[1])
     game = crud.make_move(db, game_id, move)
     return schemas.GameState(
         id=str(game.id),
@@ -67,7 +86,7 @@ def make_move(game_id: UUID, move: schemas.MoveRequest, db: Session = Depends(ge
 @router.delete("/{game_id}")
 def delete_game(game_id: UUID, db: Session = Depends(get_db)):
     crud.delete_game(db, game_id)
-    return {"detail": "Game deleted"}
+    return {"detail": f"Game {game_id} deleted"}
 
 @router.websocket("/ws/{game_id}/{client_type}")
 async def websocket_endpoint(websocket: WebSocket, game_id: str, client_type: str):

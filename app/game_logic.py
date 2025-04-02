@@ -43,3 +43,9 @@ def easy_bot_move(board):
             if apply_move(temp, row, side, 'o'):
                 valid_moves.append((row, side))
     return random.choice(valid_moves) if valid_moves else None
+
+def medium_bot_move(board):
+    return easy_bot_move(board)
+
+def hard_bot_move(board):
+    return easy_bot_move(board)
