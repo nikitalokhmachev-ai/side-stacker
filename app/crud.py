@@ -34,6 +34,9 @@ def create_game(db: Session, req: schemas.GameCreateRequest) -> models.Game:
 def get_game(db: Session, game_id: uuid.UUID) -> models.Game:
     return db.query(models.Game).filter(models.Game.id == game_id).first()
 
+def get_games(db: Session) -> list[models.Game]:
+    return db.query(models.Game).all()
+
 def delete_game(db: Session, game_id: uuid.UUID):
     game = db.query(models.Game).filter(models.Game.id == game_id).first()
     if game:

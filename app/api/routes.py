@@ -50,6 +50,20 @@ def get_game_state(game_id: UUID, db: Session = Depends(get_db)):
             id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
     )
 
+@router.get("/games", response_model=list[schemas.GameState])
+def get_all_games(db: Session = Depends(get_db)):
+    games = crud.get_games(db)
+    return [schemas.GameState(
+                id=str(game.id),
+                board=game.board,
+                current_turn=game.current_turn,
+                status=game.status,
+                player_1=schemas.PlayerInfo(
+                    id=game.player_1.id, nickname=game.player_1.nickname, type=game.player_1.type),
+                player_2=schemas.PlayerInfo(
+                    id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
+                ) for game in games]
+
 @router.post("/{game_id}/move", response_model=schemas.GameState)
 def make_move(game_id: UUID, move: schemas.Move, db: Session = Depends(get_db)):
     game = crud.make_move(db, game_id, move)
