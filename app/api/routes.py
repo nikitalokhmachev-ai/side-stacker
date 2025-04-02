@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from .. import crud, schemas, models
 from ..database import SessionLocal
+from typing import List
 
 router = APIRouter()
 
@@ -50,7 +51,7 @@ def get_game_state(game_id: UUID, db: Session = Depends(get_db)):
             id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
     )
 
-@router.get("/games", response_model=list[schemas.GameState])
+@router.get("/games", response_model=List[schemas.GameState])
 def get_all_games(db: Session = Depends(get_db)):
     games = crud.get_games(db)
     return [schemas.GameState(
