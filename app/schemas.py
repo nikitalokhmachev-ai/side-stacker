@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from uuid import UUID
 from enum import Enum
+from typing import Any
+from pydantic.fields import Field
 
 class PlayerType(str, Enum):
     human = "human"
@@ -26,9 +28,6 @@ class Move(BaseModel):
 class GameCreateRequest(BaseModel):
     player_1_id: UUID
     player_2_id: UUID
-
-class Game(BaseModel):
-    id: UUID
 
 class GameState(BaseModel):
     id: str

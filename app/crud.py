@@ -16,6 +16,13 @@ def create_player(db: Session, player: schemas.PlayerCreate) -> models.Player:
 def get_player(db: Session, player_id: uuid.UUID) -> models.Player:
     return db.query(models.Player).filter(models.Player.id == player_id).first()
 
+def delete_player(db: Session, player_id: uuid.UUID):
+    player = db.query(models.Player).filter(models.Player.id == player_id).first()
+    if player:
+        db.delete(player)
+        db.commit()
+        
+
 def create_game(db: Session, req: schemas.GameCreateRequest) -> models.Game:
     board = initial_board()
     game = models.Game(
@@ -34,8 +41,11 @@ def create_game(db: Session, req: schemas.GameCreateRequest) -> models.Game:
 def get_game(db: Session, game_id: uuid.UUID) -> models.Game:
     return db.query(models.Game).filter(models.Game.id == game_id).first()
 
-def get_games(db: Session) -> list[models.Game]:
+def get_all_games(db: Session) -> list[models.Game]:
     return db.query(models.Game).all()
+
+def get_all_players(db: Session) -> list[models.Player]:
+    return db.query(models.Player).all()
 
 def delete_game(db: Session, game_id: uuid.UUID):
     game = db.query(models.Game).filter(models.Game.id == game_id).first()

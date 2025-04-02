@@ -16,26 +16,18 @@ def get_db():
     finally:
         db.close()
 
-@router.post("/players", response_model=schemas.PlayerInfo)
-def create_player(player: schemas.PlayerCreate, db: Session = Depends(get_db)):
-    db_player = crud.create_player(db, player)
-    return schemas.PlayerInfo(id=db_player.id, nickname=db_player.nickname, type=db_player.type)
+@router.get("/api/games", response_model=List[schemas.GameState])
+def get_all_games(db: Session = Depends(get_db)):
+    games = crud.get_all_games(db)
+    return [schemas.GameState(id=str(game.id), 
+                         player_1=schemas.PlayerInfo(id=game.player_1.id, nickname=game.player_1.nickname, type=game.player_1.type),
+                         player_2=schemas.PlayerInfo(id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type),
+                         current_turn=game.current_turn,
+                         board=game.board,
+                         status=game.status) 
+                         for game in games]
 
-@router.post("/create", response_model=schemas.GameState)
-def create_game(req: schemas.GameCreateRequest, db: Session = Depends(get_db)):
-    game = crud.create_game(db, req)
-    return schemas.GameState(
-        id=str(game.id),
-        board=game.board,
-        current_turn=game.current_turn,
-        status=game.status,
-        player_1=schemas.PlayerInfo(
-            id=game.player_1.id, nickname=game.player_1.nickname, type=game.player_1.type),
-        player_2=schemas.PlayerInfo(
-            id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
-    )
-
-@router.get("/{game_id}", response_model=schemas.GameState)
+@router.get("/api/games/{game_id}", response_model=schemas.GameState)
 def get_game_state(game_id: UUID, db: Session = Depends(get_db)):
     game = crud.get_game(db, game_id)
     if not game:
@@ -51,12 +43,21 @@ def get_game_state(game_id: UUID, db: Session = Depends(get_db)):
             id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
     )
 
-@router.get("/games", response_model=List[schemas.Game])
-def get_games(db: Session = Depends(get_db)):
-    return [schemas.Game(id=game.id) for game in crud.get_games(db)]
+@router.post("/api/game", response_model=schemas.GameState)
+def create_game(req: schemas.GameCreateRequest, db: Session = Depends(get_db)):
+    game = crud.create_game(db, req)
+    return schemas.GameState(
+        id=str(game.id),
+        board=game.board,
+        current_turn=game.current_turn,
+        status=game.status,
+        player_1=schemas.PlayerInfo(
+            id=game.player_1.id, nickname=game.player_1.nickname, type=game.player_1.type),
+        player_2=schemas.PlayerInfo(
+            id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
+    )
 
-
-@router.post("/{game_id}/move", response_model=schemas.GameState)
+@router.post("/api/games/{game_id}/move", response_model=schemas.GameState)
 def make_move(game_id: UUID, move: schemas.Move, db: Session = Depends(get_db)):
     game = crud.make_move(db, game_id, move)
     return schemas.GameState(
@@ -70,9 +71,10 @@ def make_move(game_id: UUID, move: schemas.Move, db: Session = Depends(get_db)):
             id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
     )
 
-@router.post("/{game_id}/bot/{difficulty}", response_model=schemas.GameState)
+@router.post("/api/games/{game_id}/bot_move/{difficulty}", response_model=schemas.GameState)
 def make_bot_move(game_id: UUID, difficulty: str, db: Session = Depends(get_db)):
     bot_move = crud.get_bot_move(db, game_id, difficulty)
+    game = crud.get_game(db, game_id)
     if not bot_move:
         raise HTTPException(status_code=404, detail="Difficulty not found.")
 
@@ -89,30 +91,55 @@ def make_bot_move(game_id: UUID, difficulty: str, db: Session = Depends(get_db))
             id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
     )
 
-@router.delete("/{game_id}")
+@router.delete("/api/games/{game_id}")
 def delete_game(game_id: UUID, db: Session = Depends(get_db)):
     crud.delete_game(db, game_id)
     return {"detail": f"Game {game_id} deleted"}
 
-@router.websocket("/ws/{game_id}/{client_type}")
-async def websocket_endpoint(websocket: WebSocket, game_id: str, client_type: str):
-    await websocket.accept()
-    if game_id not in sessions:
-        sessions[game_id] = {"players": set(), "spectators": set()}
+@router.get("/api/players", response_model=List[schemas.PlayerInfo])
+def get_all_players(db: Session = Depends(get_db)):
+    players = crud.get_all_players(db)
+    return [schemas.PlayerInfo(id=player.id, nickname=player.nickname, type=player.type) for player in players]
 
-    if client_type in ["player1", "player2"]:
-        sessions[game_id]["players"].add(websocket)
-    else:
-        sessions[game_id]["spectators"].add(websocket)
 
-    try:
-        while True:
-            data = await websocket.receive_text()
-            for ws in sessions[game_id]["players"].union(sessions[game_id]["spectators"]):
-                if ws is not websocket:
-                    await ws.send_text(data)
-    except WebSocketDisconnect:
-        sessions[game_id]["players"].discard(websocket)
-        sessions[game_id]["spectators"].discard(websocket)
-        if not sessions[game_id]["players"] and not sessions[game_id]["spectators"]:
-            del sessions[game_id]
+@router.get("/api/players/{player_id}", response_model=schemas.PlayerInfo)
+def get_player(player_id: UUID, db: Session = Depends(get_db)):
+    player = crud.get_player(db, player_id)
+    if not player:
+        raise HTTPException(status_code=404, detail=f"Player {player_id} not found")
+    return schemas.PlayerInfo(id=player.id, nickname=player.nickname, type=player.type)
+
+@router.post("/api/player", response_model=schemas.PlayerInfo)
+def create_player(player: schemas.PlayerCreate, db: Session = Depends(get_db)):
+    db_player = crud.create_player(db, player)
+    return schemas.PlayerInfo(id=db_player.id, nickname=db_player.nickname, type=db_player.type)
+
+@router.delete("/api/players/{player_id}")
+def delete_player(player_id: UUID, db: Session = Depends(get_db)):
+    crud.delete_player(db, player_id)
+    return {"detail": f"Player {player_id} deleted"}
+
+
+
+# @router.websocket("/ws/{game_id}/{client_type}")
+# async def websocket_endpoint(websocket: WebSocket, game_id: str, client_type: str):
+#     await websocket.accept()
+#     if game_id not in sessions:
+#         sessions[game_id] = {"players": set(), "spectators": set()}
+
+#     if client_type in ["player1", "player2"]:
+#         sessions[game_id]["players"].add(websocket)
+#     else:
+#         sessions[game_id]["spectators"].add(websocket)
+
+#     try:
+#         while True:
+#             data = await websocket.receive_text()
+#             for ws in sessions[game_id]["players"].union(sessions[game_id]["spectators"]):
+#                 if ws is not websocket:
+#                     await ws.send_text(data)
+#     except WebSocketDisconnect:
+#         sessions[game_id]["players"].discard(websocket)
+#         sessions[game_id]["spectators"].discard(websocket)
+#         if not sessions[game_id]["players"] and not sessions[game_id]["spectators"]:
+#             del sessions[game_id]
