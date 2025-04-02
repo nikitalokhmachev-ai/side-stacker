@@ -27,6 +27,9 @@ class GameCreateRequest(BaseModel):
     player_1_id: UUID
     player_2_id: UUID
 
+class Game(BaseModel):
+    id: UUID
+
 class GameState(BaseModel):
     id: str
     board: List[List[str]]
