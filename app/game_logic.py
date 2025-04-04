@@ -3,10 +3,6 @@ import copy
 ROWS = 7
 COLS = 7
 
-
-
-
-
 def initial_board():
     return [["_" for _ in range(COLS)] for _ in range(ROWS)]
 
@@ -43,7 +39,7 @@ def easy_bot_move(board, bot_symbol):
     valid_moves = []
     for row in range(ROWS):
         for side in ['L', 'R']:
-            temp = [r.copy() for r in board]
+            temp = copy.deepcopy(board)
             if apply_move(temp, row, side, bot_symbol):
                 valid_moves.append((row, side))
     return random.choice(valid_moves) if valid_moves else None
@@ -119,7 +115,7 @@ def minimax_simple(board, depth, maximizing, bot_symbol):
         max_eval = float('-inf')
         for row in range(ROWS):
             for side in ['L', 'R']:
-                temp_board = [r.copy() for r in board]
+                temp_board = copy.deepcopy(board)
                 if apply_move(temp_board, row, side, bot_symbol):
                     eval = minimax_simple(temp_board, depth - 1, False, bot_symbol)
                     max_eval = max(max_eval, eval)
@@ -128,7 +124,7 @@ def minimax_simple(board, depth, maximizing, bot_symbol):
         min_eval = float('inf')
         for row in range(ROWS):
             for side in ['L', 'R']:
-                temp_board = [r.copy() for r in board]
+                temp_board = copy.deepcopy(board)
                 if apply_move(temp_board, row, side, opponent_symbol):
                     eval = minimax_simple(temp_board, depth - 1, True, bot_symbol)
                     min_eval = min(min_eval, eval)
@@ -140,7 +136,7 @@ def medium_bot_move(board, bot_symbol, depth=3):
 
     for row in range(ROWS):
         for side in ['L', 'R']:
-            temp_board = [r.copy() for r in board]
+            temp_board = copy.deepcopy(board)
             if apply_move(temp_board, row, side, bot_symbol):
                 score = minimax_simple(temp_board, depth - 1, False, bot_symbol)
                 if score > best_score:
