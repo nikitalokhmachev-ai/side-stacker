@@ -62,17 +62,18 @@ def score_window(window, bot_symbol, opponent_symbol):
 
     score_map = {
         (4, 0): 10000,
-        (3, 1): 500,     
+        (3, 1): 500,
         (2, 2): 50,
-        (1, 3): 5,    
+        (1, 3): 5,
         (0, 4): -10000,
-        (0, 3): -500,
-        (0, 2): -50,
-        (0, 1): -5,
+        (0, 3): -5000,  # increased from -500 → -5000
+        (0, 2): -200,   # increased from -50
+        (0, 1): -20     # increased from -5
     }
 
     key = (counts[bot_symbol], counts['_'])
     return score_map.get(key, 0)
+
 
 def evaluate_board(board, bot_symbol):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
@@ -146,7 +147,7 @@ def minimax_ab_cached(flat_board, depth, alpha, beta, maximizing, bot_symbol, op
                         break
         return min_eval
 
-def medium_bot_move(board, bot_symbol, depth=4):
+def medium_bot_move(board, bot_symbol, depth=2):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
     best_score = float('-inf')
     best_move = None
