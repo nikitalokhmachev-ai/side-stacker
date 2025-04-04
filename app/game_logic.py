@@ -57,18 +57,27 @@ def score_window(window, bot_symbol, opponent_symbol):
 
     score_map = {
         (4, 0): 10000,
-        (3, 1): 500,
-        (2, 2): 50,
-        (1, 3): 5,
-        (0, 4): -50000,  # Loss is now very expensive
-        (0, 3): -10000,  # Block opponent's 3 immediately
-        (0, 2): -1000,   # Heavily penalize potential threats
-        (0, 1): -100     # Still punish weak threats
+        (3, 1): 1000,    # increased for stronger threat recognition
+        (2, 2): 100,
+        (1, 3): 10,
+        (0, 4): -100000,  # huge penalty for allowing a win
+        (0, 3): -10000,
+        (0, 2): -500,
+        (0, 1): -50
     }
 
     key = (counts[bot_symbol], counts['_'])
     return score_map.get(key, 0)
 
+def check_blocking_move(board, bot_symbol):
+    opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
+    for row in range(ROWS):
+        for side in ['L', 'R']:
+            temp_board = copy.deepcopy(board)
+            if apply_move(temp_board, row, side, opponent_symbol):
+                if check_winner(temp_board, opponent_symbol):
+                    return (row, side)
+    return None
 
 def evaluate_board(board, bot_symbol):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
@@ -100,14 +109,13 @@ def evaluate_board(board, bot_symbol):
 
     return score
 
-def minimax_simple(board, depth, maximizing, bot_symbol):
+def minimax_smart(board, depth, maximizing, bot_symbol):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
 
-    # Terminal condition
     if check_winner(board, bot_symbol):
         return 10000 + depth
     if check_winner(board, opponent_symbol):
-        return -50000 - depth
+        return -100000 - (10 * depth)  # make losses harsher the sooner they happen
     if board_full(board) or depth == 0:
         return evaluate_board(board, bot_symbol)
 
@@ -117,7 +125,7 @@ def minimax_simple(board, depth, maximizing, bot_symbol):
             for side in ['L', 'R']:
                 temp_board = copy.deepcopy(board)
                 if apply_move(temp_board, row, side, bot_symbol):
-                    eval = minimax_simple(temp_board, depth - 1, False, bot_symbol)
+                    eval = minimax_smart(temp_board, depth - 1, False, bot_symbol)
                     max_eval = max(max_eval, eval)
         return max_eval
     else:
@@ -126,7 +134,7 @@ def minimax_simple(board, depth, maximizing, bot_symbol):
             for side in ['L', 'R']:
                 temp_board = copy.deepcopy(board)
                 if apply_move(temp_board, row, side, opponent_symbol):
-                    eval = minimax_simple(temp_board, depth - 1, True, bot_symbol)
+                    eval = minimax_smart(temp_board, depth - 1, True, bot_symbol)
                     min_eval = min(min_eval, eval)
         return min_eval
 
@@ -134,11 +142,17 @@ def medium_bot_move(board, bot_symbol, depth=3):
     best_score = float('-inf')
     best_move = None
 
+    # First, check if we must block a win
+    blocking_move = check_blocking_move(board, bot_symbol)
+    if blocking_move:
+        print("🚨 Blocking move detected:", blocking_move)
+        return blocking_move
+
     for row in range(ROWS):
         for side in ['L', 'R']:
             temp_board = copy.deepcopy(board)
             if apply_move(temp_board, row, side, bot_symbol):
-                score = minimax_simple(temp_board, depth - 1, False, bot_symbol)
+                score = minimax_smart(temp_board, depth - 1, False, bot_symbol)
                 if score > best_score:
                     best_score = score
                     best_move = (row, side)
