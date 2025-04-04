@@ -149,7 +149,7 @@ def minimax_ab_cached(flat_board, depth, alpha, beta, maximizing, bot_symbol, op
         return min_eval
 
 
-def medium_bot_move(board, bot_symbol, depth=2):
+def medium_bot_move(board, bot_symbol, depth=3):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
     best_score = float('-inf')
     best_move = None
