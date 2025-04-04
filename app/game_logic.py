@@ -65,10 +65,10 @@ def score_window(window, bot_symbol, opponent_symbol):
         (3, 1): 500,
         (2, 2): 50,
         (1, 3): 5,
-        (0, 4): -10000,
-        (0, 3): -5000,  # increased from -500 → -5000
-        (0, 2): -200,   # increased from -50
-        (0, 1): -20     # increased from -5
+        (0, 4): -50000,  # Loss is now very expensive
+        (0, 3): -10000,  # Block opponent's 3 immediately
+        (0, 2): -1000,   # Heavily penalize potential threats
+        (0, 1): -100     # Still punish weak threats
     }
 
     key = (counts[bot_symbol], counts['_'])
