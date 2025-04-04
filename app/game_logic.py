@@ -1,6 +1,5 @@
 import random
 import copy
-from functools import lru_cache
 ROWS = 7
 COLS = 7
 
@@ -105,21 +104,14 @@ def evaluate_board(board, bot_symbol):
 
     return score
 
-# Convert the board to a flat string for caching
-def flatten_board(board):
-    return ''.join(cell for row in board for cell in row)
+def minimax_simple(board, depth, maximizing, bot_symbol):
+    opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
 
-
-@lru_cache(maxsize=100_000)
-def minimax_ab_cached(flat_board, depth, alpha, beta, maximizing, bot_symbol, opponent_symbol):
-    board = [list(flat_board[i*COLS:(i+1)*COLS]) for i in range(ROWS)]
-
-    # Always check terminal state first, regardless of depth
+    # Terminal condition
     if check_winner(board, bot_symbol):
-        return 10000 + depth  # slight depth bias to prefer quicker wins
+        return 10000 + depth
     if check_winner(board, opponent_symbol):
-        return -50000 - depth  # huge penalty, also prefer to lose later
-
+        return -50000 - depth
     if board_full(board) or depth == 0:
         return evaluate_board(board, bot_symbol)
 
@@ -129,11 +121,8 @@ def minimax_ab_cached(flat_board, depth, alpha, beta, maximizing, bot_symbol, op
             for side in ['L', 'R']:
                 temp_board = [r.copy() for r in board]
                 if apply_move(temp_board, row, side, bot_symbol):
-                    eval = minimax_ab_cached(flatten_board(temp_board), depth - 1, alpha, beta, False, bot_symbol, opponent_symbol)
+                    eval = minimax_simple(temp_board, depth - 1, False, bot_symbol)
                     max_eval = max(max_eval, eval)
-                    alpha = max(alpha, eval)
-                    if beta <= alpha:
-                        break
         return max_eval
     else:
         min_eval = float('inf')
@@ -141,16 +130,11 @@ def minimax_ab_cached(flat_board, depth, alpha, beta, maximizing, bot_symbol, op
             for side in ['L', 'R']:
                 temp_board = [r.copy() for r in board]
                 if apply_move(temp_board, row, side, opponent_symbol):
-                    eval = minimax_ab_cached(flatten_board(temp_board), depth - 1, alpha, beta, True, bot_symbol, opponent_symbol)
+                    eval = minimax_simple(temp_board, depth - 1, True, bot_symbol)
                     min_eval = min(min_eval, eval)
-                    beta = min(beta, eval)
-                    if beta <= alpha:
-                        break
         return min_eval
 
-
 def medium_bot_move(board, bot_symbol, depth=3):
-    opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
     best_score = float('-inf')
     best_move = None
 
@@ -158,7 +142,7 @@ def medium_bot_move(board, bot_symbol, depth=3):
         for side in ['L', 'R']:
             temp_board = [r.copy() for r in board]
             if apply_move(temp_board, row, side, bot_symbol):
-                score = minimax_ab_cached(flatten_board(temp_board), depth - 1, float('-inf'), float('inf'), False, bot_symbol, opponent_symbol)
+                score = minimax_simple(temp_board, depth - 1, False, bot_symbol)
                 if score > best_score:
                     best_score = score
                     best_move = (row, side)
