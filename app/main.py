@@ -7,6 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import websocket_endpoint
 from fastapi.websockets import WebSocket
 from uuid import UUID
+import os
+import dotenv
+
+dotenv.load_dotenv()
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -14,13 +18,15 @@ Base.metadata.create_all(bind=engine)
 
 # FastAPI app
 app = FastAPI()
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],  # Change this in production!
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        os.getenv("ORIGIN", "*")
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(routes.router)
 
