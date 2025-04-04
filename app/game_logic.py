@@ -46,28 +46,17 @@ def easy_bot_move(board, bot_symbol):
 
 ### MINIMAX ###
 def score_window(window, bot_symbol, opponent_symbol):
-    counts = {
-        bot_symbol: window.count(bot_symbol),
-        opponent_symbol: window.count(opponent_symbol),
-        '_': window.count('_')
-    }
+    bot_count = window.count(bot_symbol)
+    opp_count = window.count(opponent_symbol)
 
-    if counts[bot_symbol] > 0 and counts[opponent_symbol] > 0:
-        return 0  # mixed window
+    if bot_count > 0 and opp_count > 0:
+        return 0  # mixed window, no threat
 
-    score_map = {
-        (4, 0): 10000,
-        (3, 1): 1000,    # increased for stronger threat recognition
-        (2, 2): 100,
-        (1, 3): 10,
-        (0, 4): -100000,  # huge penalty for allowing a win
-        (0, 3): -10000,
-        (0, 2): -500,
-        (0, 1): -50
-    }
-
-    key = (counts[bot_symbol], counts['_'])
-    return score_map.get(key, 0)
+    if bot_count > 0:
+        return bot_count  # 1 to 4
+    elif opp_count > 0:
+        return -opp_count  # -1 to -4
+    return 0
 
 def check_blocking_move(board, bot_symbol):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
