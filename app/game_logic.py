@@ -35,7 +35,24 @@ def check_winner(board, symbol):
 def board_full(board):
     return all(cell != '_' for row in board for cell in row)
 
+
+def check_blocking_move(board, bot_symbol):
+    opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
+    for row in range(ROWS):
+        for side in ['L', 'R']:
+            temp_board = copy.deepcopy(board)
+            if apply_move(temp_board, row, side, opponent_symbol):
+                if check_winner(temp_board, opponent_symbol):
+                    return (row, side)
+    return None
+
 def easy_bot_move(board, bot_symbol):
+    # Check for immediate threat to block
+    blocking_move = check_blocking_move(board, bot_symbol)
+    if blocking_move:
+        return blocking_move
+
+    # Otherwise make a random valid move
     valid_moves = []
     for row in range(ROWS):
         for side in ['L', 'R']:
@@ -58,15 +75,6 @@ def score_window(window, bot_symbol, opponent_symbol):
         return -opp_count  # -1 to -4
     return 0
 
-def check_blocking_move(board, bot_symbol):
-    opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
-    for row in range(ROWS):
-        for side in ['L', 'R']:
-            temp_board = copy.deepcopy(board)
-            if apply_move(temp_board, row, side, opponent_symbol):
-                if check_winner(temp_board, opponent_symbol):
-                    return (row, side)
-    return None
 
 def evaluate_board(board, bot_symbol):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
