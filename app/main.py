@@ -4,6 +4,9 @@ from fastapi import FastAPI
 from app.api import routes
 from app.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.routes import websocket_endpoint
+from fastapi.websockets import WebSocket
+from uuid import UUID
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -20,6 +23,11 @@ app.add_middleware(
 )
 
 app.include_router(routes.router)
+
+@app.websocket("/ws/games/{game_id}")
+async def websocket_proxy(websocket: WebSocket, game_id: UUID):
+    await websocket_endpoint(websocket, game_id)
+
 
 # Entry point
 if __name__ == "__main__":

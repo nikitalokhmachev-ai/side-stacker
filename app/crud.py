@@ -57,6 +57,9 @@ def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Gam
     game = get_game(db, game_id)
     if game.status != 'in_progress':
         return game
+    
+    if move.player != game.current_turn:
+        return game
 
     board = game.board
     symbol = move.player
