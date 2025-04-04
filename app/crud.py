@@ -50,8 +50,17 @@ def get_all_players(db: Session) -> list[models.Player]:
 def delete_game(db: Session, game_id: uuid.UUID):
     game = db.query(models.Game).filter(models.Game.id == game_id).first()
     if game:
+        # Delete associated players
+        player1 = db.query(models.Player).filter(models.Player.id == game.player_1_id).first()
+        player2 = db.query(models.Player).filter(models.Player.id == game.player_2_id).first()
+        if player1:
+            db.delete(player1)
+        if player2:
+            db.delete(player2)
+
         db.delete(game)
         db.commit()
+
 
 def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Game:
     game = get_game(db, game_id)
