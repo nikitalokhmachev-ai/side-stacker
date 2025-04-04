@@ -112,13 +112,14 @@ def flatten_board(board):
 
 @lru_cache(maxsize=100_000)
 def minimax_ab_cached(flat_board, depth, alpha, beta, maximizing, bot_symbol, opponent_symbol):
-    # Reconstruct the board from string
     board = [list(flat_board[i*COLS:(i+1)*COLS]) for i in range(ROWS)]
 
+    # Always check terminal state first, regardless of depth
     if check_winner(board, bot_symbol):
-        return 10000
+        return 10000 + depth  # slight depth bias to prefer quicker wins
     if check_winner(board, opponent_symbol):
-        return -10000
+        return -50000 - depth  # huge penalty, also prefer to lose later
+
     if board_full(board) or depth == 0:
         return evaluate_board(board, bot_symbol)
 
@@ -146,6 +147,7 @@ def minimax_ab_cached(flat_board, depth, alpha, beta, maximizing, bot_symbol, op
                     if beta <= alpha:
                         break
         return min_eval
+
 
 def medium_bot_move(board, bot_symbol, depth=2):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
