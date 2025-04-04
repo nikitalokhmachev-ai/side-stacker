@@ -92,13 +92,13 @@ def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Gam
 def get_bot_move(db: Session, game_id: uuid.UUID, difficulty: str) -> models.Game:
     game = get_game(db, game_id)
     board = game.board
-    
+    bot_symbol = game.current_turn
     bot_move = None
     if difficulty == 'easy_bot':
-        bot_move = easy_bot_move(board)
+        bot_move = easy_bot_move(board, bot_symbol)
     if difficulty == 'medium_bot':
-        bot_move = medium_bot_move(board)
+        bot_move = medium_bot_move(board, bot_symbol)
     if difficulty == 'hard_bot':
-        bot_move = hard_bot_move(board)
+        bot_move = hard_bot_move(board, bot_symbol)
     
     return bot_move
