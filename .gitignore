@@ -3,3 +3,5 @@
 *__pycache__
 .export-ignore
 export.md
+*.mp4
+*.zip
