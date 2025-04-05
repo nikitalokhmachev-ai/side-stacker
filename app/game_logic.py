@@ -143,7 +143,7 @@ def minimax_smart(board, depth, maximizing, bot_symbol, alpha=float('-inf'), bet
         return min_eval
 
 
-def medium_bot_move(board, bot_symbol, depth=3):
+def medium_bot_move(board, bot_symbol, depth=4):
     best_score = float('-inf')
     best_move = None
 
