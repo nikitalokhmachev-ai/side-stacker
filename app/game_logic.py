@@ -113,8 +113,8 @@ def minimax_smart(board, depth, maximizing, bot_symbol):
     #     return 10000 + depth
     # if check_winner(board, opponent_symbol):
     #     return -100000 - (10 * depth)  # make losses harsher the sooner they happen
-    # if board_full(board) or depth == 0:
-    #     return evaluate_board(board, bot_symbol)
+    if board_full(board) or depth == 0:
+        return evaluate_board(board, bot_symbol)
 
     if maximizing:
         max_eval = float('-inf')
