@@ -6,18 +6,48 @@ COLS = 7
 def initial_board():
     return [["_" for _ in range(COLS)] for _ in range(ROWS)]
 
+# def apply_move(board, row, side, symbol):
+#     if side == 'L':
+#         for col in range(COLS):
+#             if board[row][col] == '_':
+#                 board[row][col] = symbol
+#                 return True
+#     elif side == 'R':
+#         for col in reversed(range(COLS)):
+#             if board[row][col] == '_':
+#                 board[row][col] = symbol
+#                 return True
+#     return False
+
 def apply_move(board, row, side, symbol):
     if side == 'L':
+        # Insert symbol at the leftmost position and shift right
         for col in range(COLS):
             if board[row][col] == '_':
                 board[row][col] = symbol
-                return True
+                break
+            elif col == COLS - 1:
+                return False  # No space to insert
+        for shift_col in range(col, 0, -1):
+            board[row][shift_col] = board[row][shift_col - 1]
+        board[row][0] = symbol
+        return True
+
     elif side == 'R':
-        for col in reversed(range(COLS)):
+        # Insert symbol at the rightmost position and shift left
+        for col in range(COLS - 1, -1, -1):
             if board[row][col] == '_':
                 board[row][col] = symbol
-                return True
+                break
+            elif col == 0:
+                return False  # No space to insert
+        for shift_col in range(col, COLS - 1):
+            board[row][shift_col] = board[row][shift_col + 1]
+        board[row][COLS - 1] = symbol
+        return True
+
     return False
+
 
 def check_winner(board, symbol):
     for r in range(ROWS):
@@ -36,15 +66,26 @@ def board_full(board):
     return all(cell != '_' for row in board for cell in row)
 
 
+# def check_blocking_move(board, bot_symbol):
+#     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
+#     for row in range(ROWS):
+#         for side in ['L', 'R']:
+#             temp_board = copy.deepcopy(board)
+#             if apply_move(temp_board, row, side, opponent_symbol):
+#                 if check_winner(temp_board, opponent_symbol):
+#                     return (row, side)
+#     return None
+
 def check_blocking_move(board, bot_symbol):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
     for row in range(ROWS):
         for side in ['L', 'R']:
             temp_board = copy.deepcopy(board)
-            if apply_move(temp_board, row, side, opponent_symbol):
-                if check_winner(temp_board, opponent_symbol):
-                    return (row, side)
+            move_success = apply_move(temp_board, row, side, opponent_symbol)
+            if move_success and check_winner(temp_board, opponent_symbol):
+                return (row, side)
     return None
+
 
 def easy_bot_move(board, bot_symbol):
     # Check for immediate threat to block

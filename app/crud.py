@@ -76,8 +76,10 @@ def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Gam
     if not success:
         return game
 
-    if check_winner(board, symbol):
-        game.status = f"{symbol}_won"
+    if check_winner(board, 'x'):
+        game.status = f"x_won"
+    elif check_winner(board, 'o'):
+        game.status = f"o_won"
     elif board_full(board):
         game.status = "draw"
     else:
