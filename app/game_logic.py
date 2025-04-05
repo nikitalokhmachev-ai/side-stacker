@@ -48,9 +48,14 @@ def check_blocking_move(board, bot_symbol):
 
 def easy_bot_move(board, bot_symbol):
     # Check for immediate threat to block
+    opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
     blocking_move = check_blocking_move(board, bot_symbol)
     if blocking_move:
         return blocking_move
+    
+    winning_move = check_blocking_move(board, opponent_symbol)
+    if winning_move:
+        return winning_move
 
     # Otherwise make a random valid move
     valid_moves = []
@@ -146,12 +151,17 @@ def minimax_smart(board, depth, maximizing, bot_symbol, alpha=float('-inf'), bet
 def medium_bot_move(board, bot_symbol, depth=4):
     best_score = float('-inf')
     best_move = None
-
+    opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
     # First, check if we must block a win
     blocking_move = check_blocking_move(board, bot_symbol)
     if blocking_move:
         print("🚨 Blocking move detected:", blocking_move)
         return blocking_move
+    
+    winning_move = check_blocking_move(board, opponent_symbol)
+    if winning_move:
+        print("🚨 Winning move detected:", winning_move)
+        return winning_move
 
     for row in range(ROWS):
         for side in ['L', 'R']:
