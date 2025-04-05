@@ -106,13 +106,13 @@ def evaluate_board(board, bot_symbol):
 
     return score
 
-def minimax_smart(board, depth, maximizing, bot_symbol):
+def minimax_smart(board, depth, maximizing, bot_symbol, alpha=float('-inf'), beta=float('inf')):
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
 
     # if check_winner(board, bot_symbol):
-    #     return 10000 + depth
+    #     return 10000
     # if check_winner(board, opponent_symbol):
-    #     return -100000 - (10 * depth)  # make losses harsher the sooner they happen
+    #     return -100000
     if board_full(board) or depth == 0:
         return evaluate_board(board, bot_symbol)
 
@@ -122,18 +122,26 @@ def minimax_smart(board, depth, maximizing, bot_symbol):
             for side in ['L', 'R']:
                 temp_board = copy.deepcopy(board)
                 if apply_move(temp_board, row, side, bot_symbol):
-                    eval = minimax_smart(temp_board, depth - 1, False, bot_symbol)
+                    eval = minimax_smart(temp_board, depth - 1, False, bot_symbol, alpha, beta)
                     max_eval = max(max_eval, eval)
+                    alpha = max(alpha, eval)
+                    if beta <= alpha:
+                        break  # Beta cut-off
         return max_eval
+
     else:
         min_eval = float('inf')
         for row in range(ROWS):
             for side in ['L', 'R']:
                 temp_board = copy.deepcopy(board)
                 if apply_move(temp_board, row, side, opponent_symbol):
-                    eval = minimax_smart(temp_board, depth - 1, True, bot_symbol)
+                    eval = minimax_smart(temp_board, depth - 1, True, bot_symbol, alpha, beta)
                     min_eval = min(min_eval, eval)
+                    beta = min(beta, eval)
+                    if beta <= alpha:
+                        break  # Alpha cut-off
         return min_eval
+
 
 def medium_bot_move(board, bot_symbol, depth=3):
     best_score = float('-inf')
