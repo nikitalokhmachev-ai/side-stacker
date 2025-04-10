@@ -66,7 +66,7 @@ def board_full(board):
     return all(cell != '_' for row in board for cell in row)
 
 
-# def check_blocking_move(board, bot_symbol):
+# def find_winning_move(board, bot_symbol):
 #     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
 #     for row in range(ROWS):
 #         for side in ['L', 'R']:
@@ -76,29 +76,31 @@ def board_full(board):
 #                     return (row, side)
 #     return None
 
-def check_blocking_move(board, bot_symbol):
-    opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
+def find_winning_move(board, symbol):
     for row in range(ROWS):
         for side in ['L', 'R']:
             temp_board = copy.deepcopy(board)
-            move_success = apply_move(temp_board, row, side, opponent_symbol)
-            if move_success and check_winner(temp_board, opponent_symbol):
-                return (row, side)
+            if apply_move(temp_board, row, side, symbol):
+                if check_winner(temp_board, symbol):
+                    return (row, side)
     return None
 
 
 def easy_bot_move(board, bot_symbol):
     # Check for immediate threat to block
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
-    blocking_move = check_blocking_move(board, bot_symbol)
-    if blocking_move:
-        return blocking_move
-    
-    winning_move = check_blocking_move(board, opponent_symbol)
+
+    # 1. Try to win
+    winning_move = find_winning_move(board, bot_symbol)
     if winning_move:
         return winning_move
 
-    # Otherwise make a random valid move
+    # 2. Block opponent's win
+    block_move = find_winning_move(board, opponent_symbol)
+    if block_move:
+        return block_move
+
+    # 3. Else, make random move
     valid_moves = []
     for row in range(ROWS):
         for side in ['L', 'R']:
@@ -190,20 +192,21 @@ def minimax_smart(board, depth, maximizing, bot_symbol, alpha=float('-inf'), bet
 
 
 def medium_bot_move(board, bot_symbol, depth=3):
-    best_score = float('-inf')
-    best_move = None
     opponent_symbol = 'o' if bot_symbol == 'x' else 'x'
-    # First, check if we must block a win
-    blocking_move = check_blocking_move(board, bot_symbol)
-    if blocking_move:
-        print("🚨 Blocking move detected:", blocking_move)
-        return blocking_move
-    
-    winning_move = check_blocking_move(board, opponent_symbol)
+
+    # 1. Try to win
+    winning_move = find_winning_move(board, bot_symbol)
     if winning_move:
-        print("🚨 Winning move detected:", winning_move)
         return winning_move
 
+    # 2. Block opponent's win
+    block_move = find_winning_move(board, opponent_symbol)
+    if block_move:
+        return block_move
+
+    # 3. Else, use minimax
+    best_score = float('-inf')
+    best_move = None
     for row in range(ROWS):
         for side in ['L', 'R']:
             temp_board = copy.deepcopy(board)
