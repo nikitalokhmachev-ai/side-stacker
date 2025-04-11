@@ -44,6 +44,11 @@ def get_game(db: Session, game_id: uuid.UUID) -> models.Game:
 def get_all_games(db: Session) -> list[models.Game]:
     return db.query(models.Game).all()
 
+def get_games_by_player(db: Session, player_id: uuid.UUID) -> list[models.Game]:
+    return db.query(models.Game).filter(
+        (models.Game.player_1_id == player_id) | (models.Game.player_2_id == player_id)
+    ).all()
+
 def get_all_players(db: Session) -> list[models.Player]:
     return db.query(models.Player).all()
 
@@ -51,15 +56,16 @@ def delete_game(db: Session, game_id: uuid.UUID):
     game = db.query(models.Game).filter(models.Game.id == game_id).first()
     if game:
         # Delete associated players
-        player1 = db.query(models.Player).filter(models.Player.id == game.player_1_id).first()
-        player2 = db.query(models.Player).filter(models.Player.id == game.player_2_id).first()
-        if player1:
-            db.delete(player1)
-        if player2:
-            db.delete(player2)
-
-        db.delete(game)
-        db.commit()
+        # player1 = db.query(models.Player).filter(models.Player.id == game.player_1_id).first()
+        # player2 = db.query(models.Player).filter(models.Player.id == game.player_2_id).first()
+        # if player1:
+        #     db.delete(player1)
+        # if player2:
+        #     db.delete(player2)
+        if game.status == 'in_progress':
+            game.status = 'abandoned'
+            # db.delete(game)
+            db.commit()
 
 
 def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Game:

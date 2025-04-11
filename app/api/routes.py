@@ -59,6 +59,21 @@ def get_game_state(game_id: UUID, db: Session = Depends(get_db)):
             id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
     )
 
+@router.get("/api/players/{player_id}/games", response_model=List[schemas.GameState])
+def get_games_by_player(player_id: UUID, db: Session = Depends(get_db)):
+    games = crud.get_games_by_player(db, player_id)
+    return [schemas.GameState(
+        id=str(game.id),
+        board=game.board,
+        current_turn=game.current_turn,
+        status=game.status,
+        player_1=schemas.PlayerInfo(
+            id=game.player_1.id, nickname=game.player_1.nickname, type=game.player_1.type),
+        player_2=schemas.PlayerInfo(
+            id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
+    ) for game in games]
+
+
 @router.post("/api/game", response_model=schemas.GameState)
 def create_game(req: schemas.GameCreateRequest, db: Session = Depends(get_db)):
     game = crud.create_game(db, req)
