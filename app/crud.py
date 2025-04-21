@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 from . import models, schemas
 from .game_logic import initial_board, apply_move, check_winner, board_full, easy_bot_move, medium_bot_move, hard_bot_move
-
+import copy
 def create_player(db: Session, player: schemas.PlayerCreate) -> models.Player:
     db_player = models.Player(nickname=player.nickname, type=player.type)
     db.add(db_player)
@@ -115,3 +115,23 @@ def get_bot_move(db: Session, game_id: uuid.UUID, difficulty: str):
         return hard_bot_move(board, bot_symbol)
     else:
         return None
+    
+
+def generate_replay_frames(game: models.Game) -> list[list[list[str]]]:
+    """
+    Generates a list of board states after each move for replay purposes.
+    """
+    board = initial_board()
+    snapshots = [copy.deepcopy(board)]  # Initial empty board
+
+    if not game.moves:
+        return snapshots
+
+    for move in game.moves:
+        symbol = move["player"]
+        row = move["row"]
+        side = move["side"]
+        apply_move(board, row, side, symbol)
+        snapshots.append(copy.deepcopy(board))
+
+    return snapshots

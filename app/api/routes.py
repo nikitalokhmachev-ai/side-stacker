@@ -10,7 +10,6 @@ from collections import deque
 from threading import Lock
 from dataclasses import dataclass
 from typing import Optional
-
 router = APIRouter()
 
 # In-memory connection store per game
@@ -263,3 +262,12 @@ async def find_online_game(request: Request, db: Session = Depends(get_db)):
             }
 
         return { "waiting": True }
+
+@router.get("/api/games/{game_id}/replay")
+def get_game_replay(game_id: UUID, db: Session = Depends(get_db)):
+    game = crud.get_game(db, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail=f"Game {game_id} not found")
+
+    snapshots = crud.generate_replay_frames(game)
+    return snapshots
