@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 from . import models, schemas
 from .game_logic import initial_board, apply_move, check_winner, board_full, easy_bot_move, medium_bot_move, hard_bot_move
-
+import copy
 def create_player(db: Session, player: schemas.PlayerCreate) -> models.Player:
     db_player = models.Player(nickname=player.nickname, type=player.type)
     db.add(db_player)
@@ -44,6 +44,11 @@ def get_game(db: Session, game_id: uuid.UUID) -> models.Game:
 def get_all_games(db: Session) -> list[models.Game]:
     return db.query(models.Game).all()
 
+def get_games_by_player(db: Session, player_id: uuid.UUID) -> list[models.Game]:
+    return db.query(models.Game).filter(
+        (models.Game.player_1_id == player_id) | (models.Game.player_2_id == player_id)
+    ).all()
+
 def get_all_players(db: Session) -> list[models.Player]:
     return db.query(models.Player).all()
 
@@ -51,15 +56,16 @@ def delete_game(db: Session, game_id: uuid.UUID):
     game = db.query(models.Game).filter(models.Game.id == game_id).first()
     if game:
         # Delete associated players
-        player1 = db.query(models.Player).filter(models.Player.id == game.player_1_id).first()
-        player2 = db.query(models.Player).filter(models.Player.id == game.player_2_id).first()
-        if player1:
-            db.delete(player1)
-        if player2:
-            db.delete(player2)
-
-        db.delete(game)
-        db.commit()
+        # player1 = db.query(models.Player).filter(models.Player.id == game.player_1_id).first()
+        # player2 = db.query(models.Player).filter(models.Player.id == game.player_2_id).first()
+        # if player1:
+        #     db.delete(player1)
+        # if player2:
+        #     db.delete(player2)
+        if game.status == 'in_progress':
+            game.status = 'abandoned'
+            # db.delete(game)
+            db.commit()
 
 
 def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Game:
@@ -75,6 +81,10 @@ def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Gam
     success = apply_move(board, move.row, move.side, symbol)
     if not success:
         return game
+    
+    if not game.moves:
+        game.moves = []
+    game.moves.append(move.dict())
 
     if check_winner(board, 'x'):
         game.status = f"x_won"
@@ -87,6 +97,7 @@ def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Gam
 
     game.board = board
     flag_modified(game, "board")
+    flag_modified(game, "moves")
     db.commit()
     db.refresh(game)
     return game
@@ -104,3 +115,23 @@ def get_bot_move(db: Session, game_id: uuid.UUID, difficulty: str):
         return hard_bot_move(board, bot_symbol)
     else:
         return None
+    
+
+def generate_replay_frames(game: models.Game) -> list[list[list[str]]]:
+    """
+    Generates a list of board states after each move for replay purposes.
+    """
+    board = initial_board()
+    snapshots = [copy.deepcopy(board)]  # Initial empty board
+
+    if not game.moves:
+        return snapshots
+
+    for move in game.moves:
+        symbol = move["player"]
+        row = move["row"]
+        side = move["side"]
+        apply_move(board, row, side, symbol)
+        snapshots.append(copy.deepcopy(board))
+
+    return snapshots

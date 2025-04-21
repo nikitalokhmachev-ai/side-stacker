@@ -36,3 +36,4 @@ class GameState(BaseModel):
     status: str
     player_1: PlayerInfo
     player_2: PlayerInfo
+    moves: List[Move] = []

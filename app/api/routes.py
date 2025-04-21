@@ -10,7 +10,6 @@ from collections import deque
 from threading import Lock
 from dataclasses import dataclass
 from typing import Optional
-
 router = APIRouter()
 
 # In-memory connection store per game
@@ -58,6 +57,21 @@ def get_game_state(game_id: UUID, db: Session = Depends(get_db)):
         player_2=schemas.PlayerInfo(
             id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
     )
+
+@router.get("/api/players/{player_id}/games", response_model=List[schemas.GameState])
+def get_games_by_player(player_id: UUID, db: Session = Depends(get_db)):
+    games = crud.get_games_by_player(db, player_id)
+    return [schemas.GameState(
+        id=str(game.id),
+        board=game.board,
+        current_turn=game.current_turn,
+        status=game.status,
+        player_1=schemas.PlayerInfo(
+            id=game.player_1.id, nickname=game.player_1.nickname, type=game.player_1.type),
+        player_2=schemas.PlayerInfo(
+            id=game.player_2.id, nickname=game.player_2.nickname, type=game.player_2.type)
+    ) for game in games]
+
 
 @router.post("/api/game", response_model=schemas.GameState)
 def create_game(req: schemas.GameCreateRequest, db: Session = Depends(get_db)):
@@ -248,3 +262,12 @@ async def find_online_game(request: Request, db: Session = Depends(get_db)):
             }
 
         return { "waiting": True }
+
+@router.get("/api/games/{game_id}/replay")
+def get_game_replay(game_id: UUID, db: Session = Depends(get_db)):
+    game = crud.get_game(db, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail=f"Game {game_id} not found")
+
+    snapshots = crud.generate_replay_frames(game)
+    return snapshots

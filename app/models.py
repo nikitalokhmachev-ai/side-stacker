@@ -28,5 +28,7 @@ class Game(Base):
     status = Column(String, default='in_progress')
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    moves = Column(JSON, default=[])
+
     player_1 = relationship("Player", foreign_keys=[player_1_id])
     player_2 = relationship("Player", foreign_keys=[player_2_id])

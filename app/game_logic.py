@@ -6,47 +6,47 @@ COLS = 7
 def initial_board():
     return [["_" for _ in range(COLS)] for _ in range(ROWS)]
 
-# def apply_move(board, row, side, symbol):
-#     if side == 'L':
-#         for col in range(COLS):
-#             if board[row][col] == '_':
-#                 board[row][col] = symbol
-#                 return True
-#     elif side == 'R':
-#         for col in reversed(range(COLS)):
-#             if board[row][col] == '_':
-#                 board[row][col] = symbol
-#                 return True
-#     return False
-
 def apply_move(board, row, side, symbol):
     if side == 'L':
-        # Insert symbol at the leftmost position and shift right
         for col in range(COLS):
             if board[row][col] == '_':
                 board[row][col] = symbol
-                break
-            elif col == COLS - 1:
-                return False  # No space to insert
-        for shift_col in range(col, 0, -1):
-            board[row][shift_col] = board[row][shift_col - 1]
-        board[row][0] = symbol
-        return True
-
+                return True
     elif side == 'R':
-        # Insert symbol at the rightmost position and shift left
-        for col in range(COLS - 1, -1, -1):
+        for col in reversed(range(COLS)):
             if board[row][col] == '_':
                 board[row][col] = symbol
-                break
-            elif col == 0:
-                return False  # No space to insert
-        for shift_col in range(col, COLS - 1):
-            board[row][shift_col] = board[row][shift_col + 1]
-        board[row][COLS - 1] = symbol
-        return True
-
+                return True
     return False
+
+# def apply_move(board, row, side, symbol):
+#     if side == 'L':
+#         # Insert symbol at the leftmost position and shift right
+#         for col in range(COLS):
+#             if board[row][col] == '_':
+#                 board[row][col] = symbol
+#                 break
+#             elif col == COLS - 1:
+#                 return False  # No space to insert
+#         for shift_col in range(col, 0, -1):
+#             board[row][shift_col] = board[row][shift_col - 1]
+#         board[row][0] = symbol
+#         return True
+
+#     elif side == 'R':
+#         # Insert symbol at the rightmost position and shift left
+#         for col in range(COLS - 1, -1, -1):
+#             if board[row][col] == '_':
+#                 board[row][col] = symbol
+#                 break
+#             elif col == 0:
+#                 return False  # No space to insert
+#         for shift_col in range(col, COLS - 1):
+#             board[row][shift_col] = board[row][shift_col + 1]
+#         board[row][COLS - 1] = symbol
+#         return True
+
+#     return False
 
 
 def check_winner(board, symbol):
