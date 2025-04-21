@@ -81,6 +81,10 @@ def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Gam
     success = apply_move(board, move.row, move.side, symbol)
     if not success:
         return game
+    
+    if not game.moves:
+        game.moves = []
+    game.moves.append(move.dict())
 
     if check_winner(board, 'x'):
         game.status = f"x_won"
@@ -93,6 +97,7 @@ def make_move(db: Session, game_id: uuid.UUID, move: schemas.Move) -> models.Gam
 
     game.board = board
     flag_modified(game, "board")
+    flag_modified(game, "moves")
     db.commit()
     db.refresh(game)
     return game
